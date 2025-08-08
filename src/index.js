@@ -1,33 +1,43 @@
-const express = require('express');
-const { dependencies } = require('../package.json');
-const dayjs = require('dayjs');
-const chalk = require('chalk');
-const { v4: uuidv4 } = require('uuid');
-const axios = require('axios');
+// src/index.js
+import axios from 'axios';
+import chalk from 'chalk';
+import dayjs from 'dayjs';
+import { readFile } from 'fs/promises';
+import _ from 'lodash';
+import ora from 'ora';
 
-const app = express();
-const port = process.env.PORT || 3000;
+const spinner = ora('Reading package.json...').start();
 
-app.get('/', async (req, res) => {
-    let html = `<h1>📦 Project Dependencies</h1>`;
-    html += `<p>Generated at: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}</p>`;
-    html += `<p>Request ID: ${uuidv4()}</p>`;
-    html += `<ul>`;
-    for (const [name, version] of Object.entries(dependencies)) {
-        html += `<li>${name}: ${version}</li>`;
-    }
-    html += `</ul>`;
+try {
+    // Read package.json to get dependency list
+    const pkgJson = JSON.parse(
+        await readFile(new URL('../package.json', import.meta.url))
+    );
 
-    try {
-        const response = await axios.get('https://api.github.com');
-        html += `<p>GitHub API Status: ${response.status}</p>`;
-    } catch (error) {
-        html += `<p>GitHub API Error</p>`;
-    }
+    spinner.succeed('Dependencies loaded!\n');
 
-    res.send(html);
-});
+    // Display dependencies
+    console.log(chalk.green.bold('📦 Project Dependencies:'));
+    Object.entries(pkgJson.dependencies).forEach(([name, version]) => {
+        console.log(chalk.blue(name) + chalk.gray(` → ${version}`));
+    });
 
-app.listen(port, () => {
-    console.log(chalk.green(`✅ App running at http://localhost:${port}`));
-});
+    // Random lodash example
+    console.log(
+        '\n' + chalk.yellow('🔀 Random lodash shuffle:'),
+        _.shuffle([1, 2, 3, 4, 5])
+    );
+
+    // Current date/time
+    console.log(
+        chalk.magenta(`🕒 Current date is: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}`)
+    );
+
+    // Example axios call
+    const res = await axios.get('https://api.github.com/repos/nodejs/node');
+    console.log(chalk.cyan(`⭐ Node.js GitHub stars: ${res.data.stargazers_count}`));
+
+} catch (err) {
+    spinner.fail('Error loading dependencies');
+    console.error(chalk.red(err));
+}

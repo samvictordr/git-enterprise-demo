@@ -13,9 +13,8 @@
       in {
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            nodejs_20
-            npm
-            git
+            pkgs.nodejs_20
+            pkgs.git
           ];
 
           shellHook = ''

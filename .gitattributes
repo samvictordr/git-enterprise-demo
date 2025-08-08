@@ -7,3 +7,7 @@
 
 # Mark lock files as binary to avoid diff noise
 package-lock.json binary
+
+*.js linguist-detectable=false
+*.json linguist-detectable=false
+*.md linguist-detectable=false

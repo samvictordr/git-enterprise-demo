@@ -1,43 +1,63 @@
-// src/index.js
-import axios from 'axios';
 import chalk from 'chalk';
 import dayjs from 'dayjs';
-import { readFile } from 'fs/promises';
-import _ from 'lodash';
-import ora from 'ora';
+import figlet from 'figlet';
+import fs from 'fs';
+import lodash from 'lodash';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const spinner = ora('Reading package.json...').start();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-try {
-    // Read package.json to get dependency list
-    const pkgJson = JSON.parse(
-        await readFile(new URL('../package.json', import.meta.url))
-    );
+// Read package.json
+const pkgPath = path.join(__dirname, '..', 'package.json');
+const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 
-    spinner.succeed('Dependencies loaded!\n');
+const dependencies = pkg.dependencies || {};
 
-    // Display dependencies
-    console.log(chalk.green.bold('📦 Project Dependencies:'));
-    Object.entries(pkgJson.dependencies).forEach(([name, version]) => {
-        console.log(chalk.blue(name) + chalk.gray(` → ${version}`));
-    });
+console.log(chalk.green(figlet.textSync('Dependencies')));
 
-    // Random lodash example
-    console.log(
-        '\n' + chalk.yellow('🔀 Random lodash shuffle:'),
-        _.shuffle([1, 2, 3, 4, 5])
-    );
+// Build HTML content
+let htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Project Dependencies</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+    h1 { color: #333; }
+    table { border-collapse: collapse; width: 50%; background: white; }
+    th, td { padding: 8px 12px; border: 1px solid #ccc; }
+    th { background-color: #eee; }
+  </style>
+</head>
+<body>
+  <h1>Dependency Versions</h1>
+  <p>Generated at: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}</p>
+  <table>
+    <tr><th>Dependency</th><th>Version</th></tr>
+`;
 
-    // Current date/time
-    console.log(
-        chalk.magenta(`🕒 Current date is: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}`)
-    );
+// Append dependencies to HTML
+lodash.forOwn(dependencies, (version, name) => {
+    console.log(`${chalk.yellow(name)}: ${chalk.blue(version)}`);
+    htmlContent += `<tr><td>${name}</td><td>${version}</td></tr>`;
+});
 
-    // Example axios call
-    const res = await axios.get('https://api.github.com/repos/nodejs/node');
-    console.log(chalk.cyan(`⭐ Node.js GitHub stars: ${res.data.stargazers_count}`));
+htmlContent += `
+  </table>
+</body>
+</html>
+`;
 
-} catch (err) {
-    spinner.fail('Error loading dependencies');
-    console.error(chalk.red(err));
+// Ensure dist folder exists
+const distPath = path.join(__dirname, '..', 'dist');
+if (!fs.existsSync(distPath)) {
+    fs.mkdirSync(distPath);
 }
+
+// Write HTML file
+fs.writeFileSync(path.join(distPath, 'index.html'), htmlContent, 'utf8');
+
+console.log(chalk.green('\nHTML file generated at dist/index.html'));

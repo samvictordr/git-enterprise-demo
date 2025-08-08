@@ -1,0 +1,9 @@
+# Ensure consistent LF line endings across OS
+* text=auto eol=lf
+
+# Treat JS and JSON as UTF-8
+*.js text eol=lf
+*.json text eol=lf
+
+# Mark lock files as binary to avoid diff noise
+package-lock.json binary
